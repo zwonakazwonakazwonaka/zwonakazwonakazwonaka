@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WORK</title>
+
+<!-- Preconnect to external resources to speed up connections -->
+<link rel="preconnect" href="https://docs.google.com">
+<link rel="preconnect" href="https://lh3.googleusercontent.com">
+
 <style>
   :root {
     --ink: #111111;
@@ -22,9 +27,7 @@
     letter-spacing: -0.02em;
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
 
   html, body {
     margin: 0;
@@ -34,7 +37,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ---------- Nav (Fixed Top Header) ---------- */
   header {
     position: sticky;
     top: 0;
@@ -76,18 +78,15 @@
     cursor: pointer;
   }
 
-  nav a:hover {
-    border-bottom: 1px solid var(--ink);
-  }
+  nav a:hover { border-bottom: 1px solid var(--ink); }
 
-  /* ---------- Main Container ---------- */
   main {
     max-width: 1400px;
     margin: 0 auto;
     padding: 40px var(--page-margin) 120px;
     display: flex;
     flex-direction: column;
-    gap: 120px; /* Space between continuous sections */
+    gap: 120px;
   }
 
   @media (max-width: 639px) {
@@ -99,25 +98,19 @@
   }
 
   .site-section {
-    scroll-margin-top: 100px; /* Offset for sticky header when scrolling */
+    scroll-margin-top: 100px;
     width: 100%;
+    min-height: 50px; /* Prevents drastic layout shift while loading */
   }
 
-  /* ---------- Home Gallery ---------- */
   #gallery {
     column-count: 1;
     column-gap: var(--gap);
   }
 
-  @media (min-width: 640px) {
-    #gallery { column-count: 2; }
-  }
-  @media (min-width: 980px) {
-    #gallery { column-count: 3; }
-  }
-  @media (min-width: 1360px) {
-    #gallery { column-count: 4; }
-  }
+  @media (min-width: 640px) { #gallery { column-count: 2; } }
+  @media (min-width: 980px) { #gallery { column-count: 3; } }
+  @media (min-width: 1360px) { #gallery { column-count: 4; } }
 
   figure {
     margin: 0 0 var(--gap);
@@ -132,9 +125,7 @@
     margin-bottom: var(--gap);
   }
 
-  figure.media-textlogo {
-    text-align: center;
-  }
+  figure.media-textlogo { text-align: center; }
 
   figure.media-textlogo img {
     display: inline-block;
@@ -186,6 +177,7 @@
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    z-index: 2;
   }
 
   figure a:hover .caption-overlay { opacity: 1; }
@@ -221,7 +213,6 @@
     border: 0;
   }
 
-  /* ---------- Music Section ---------- */
   #music-container {
     display: flex;
     flex-direction: column;
@@ -249,6 +240,7 @@
   }
 
   .music-cover-wrap {
+    position: relative;
     width: 100%;
     background: #f4f4f4;
     overflow: hidden;
@@ -259,14 +251,17 @@
     height: auto;
     display: block;
     opacity: 0;
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.4s ease, transform 0.6s ease, filter 0.35s ease;
   }
 
   .music-cover.loaded { opacity: 1; }
   .music-item a:hover .music-title { opacity: 0.7; }
-  .music-item a:hover .music-cover { transform: scale(1.02); }
+  .music-item a:hover .music-cover {
+    filter: blur(6px);
+    transform: scale(1.03);
+  }
+  .music-item a:hover .caption-overlay { opacity: 1; }
 
-  /* ---------- Shows Section ---------- */
   #shows-container {
     max-width: 900px;
     margin: 0 auto;
@@ -338,7 +333,6 @@
     }
   }
 
-  /* ---------- Contacts Section ---------- */
   #contacts-container {
     display: flex;
     justify-content: center;
@@ -367,7 +361,6 @@
     fill: currentColor;
   }
 
-  /* Specific styling for text email link */
   .contact-item.email-text {
     font-size: 15px;
     color: var(--ink);
@@ -375,7 +368,6 @@
     text-underline-offset: 4px;
   }
 
-  /* ---------- Status ---------- */
   #status {
     text-align: center;
     padding: 20px;
@@ -420,13 +412,25 @@
   const contactsContainerEl = document.getElementById('contacts-container');
   const statusEl = document.getElementById('status');
 
-  function setStatus(msg) {
-    statusEl.textContent = msg;
-    statusEl.classList.remove('hidden');
-  }
-
   function hideStatus() {
     statusEl.classList.add('hidden');
+  }
+
+  /* Helper to fetch CSV with local cache support */
+  async function fetchCachedCSV(url, cacheKey) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      // Background re-fetch to update cache silently
+      fetch(url).then(r => r.ok && r.text()).then(text => {
+        if (text) localStorage.setItem(cacheKey, text);
+      }).catch(()=>{});
+      return cached;
+    }
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Network error");
+    const text = await res.text();
+    localStorage.setItem(cacheKey, text);
+    return text;
   }
 
   function parseCSV(text) {
@@ -505,11 +509,10 @@
     });
   }, { rootMargin: '100px 0px' });
 
-  /* ---------- Home Gallery Loader ---------- */
+  /* ---------- Section Loaders ---------- */
   function buildGallery(items) {
     galleryEl.innerHTML = '';
     const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
-
     if (!usable.length) return;
 
     usable.forEach(item => {
@@ -615,17 +618,13 @@
 
   async function loadGallery() {
     try {
-      const res = await fetch(SHEET_CSV_URL);
-      if (!res.ok) throw new Error();
-      const text = await res.text();
+      const text = await fetchCachedCSV(SHEET_CSV_URL, '_cache_gallery');
       const rows = parseCSV(text);
       if (rows.length) buildGallery(rowsToObjects(rows));
-    } catch (err) {
-      console.error("Gallery failed", err);
-    }
+    } catch (err) { console.error("Gallery failed", err); }
+    hideStatus(); // Hide loading text as soon as the main gallery is ready
   }
 
-  /* ---------- Music Tab Loader ---------- */
   function buildMusic(items) {
     musicContainerEl.innerHTML = '';
     const usable = items.filter(item => item.cover || item.name);
@@ -660,7 +659,12 @@
         img.alt = item.name || 'music cover';
         img.addEventListener('load', () => img.classList.add('loaded'));
 
+        const overlay = document.createElement('span');
+        overlay.className = 'caption-overlay';
+        overlay.textContent = 'listen here';
+
         coverWrap.appendChild(img);
+        coverWrap.appendChild(overlay);
         link.appendChild(coverWrap);
       }
 
@@ -671,17 +675,12 @@
 
   async function loadMusic() {
     try {
-      const res = await fetch(MUSIC_SHEET_CSV_URL);
-      if (!res.ok) throw new Error();
-      const text = await res.text();
+      const text = await fetchCachedCSV(MUSIC_SHEET_CSV_URL, '_cache_music');
       const rows = parseCSV(text);
       if (rows.length) buildMusic(rowsToObjects(rows));
-    } catch (err) {
-      console.error("Music failed", err);
-    }
+    } catch (err) { console.error("Music failed", err); }
   }
 
-  /* ---------- Shows Tab Loader ---------- */
   function buildShows(items) {
     showsContainerEl.innerHTML = '';
     const usable = items.filter(item => item.show || item.date || item.location);
@@ -739,17 +738,12 @@
 
   async function loadShows() {
     try {
-      const res = await fetch(SHOWS_SHEET_CSV_URL);
-      if (!res.ok) throw new Error();
-      const text = await res.text();
+      const text = await fetchCachedCSV(SHOWS_SHEET_CSV_URL, '_cache_shows');
       const rows = parseCSV(text);
       if (rows.length) buildShows(rowsToObjects(rows));
-    } catch (err) {
-      console.error("Shows failed", err);
-    }
+    } catch (err) { console.error("Shows failed", err); }
   }
 
-  /* ---------- Contacts Tab Loader ---------- */
   const SOCIAL_ICONS = {
     instagram: `<svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
     tiktok: `<svg viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.82.56-1.36 1.52-1.36 2.53-.01.99.42 1.97 1.16 2.62.83.74 2.02.97 3.08.64 1.12-.34 1.98-1.34 2.18-2.49.07-.46.08-.93.08-1.39V.02z"/></svg>`,
@@ -764,19 +758,14 @@
     usable.forEach(item => {
       const socialKey = (item.social || '').toLowerCase().trim();
       let rawLink = (item.link || '').trim();
-
       if (!rawLink) return;
 
       const a = document.createElement('a');
-
       if (socialKey === 'email') {
-        if (!rawLink.startsWith('mailto:')) {
-          rawLink = 'mailto:' + rawLink;
-        }
+        if (!rawLink.startsWith('mailto:')) rawLink = 'mailto:' + rawLink;
         a.className = 'contact-item email-text';
         a.href = rawLink;
         a.target = '_self';
-        // Display raw email address in text format
         a.textContent = rawLink.replace('mailto:', '');
       } else {
         a.className = 'contact-item';
@@ -786,37 +775,25 @@
         a.title = item.social || 'contact';
         a.innerHTML = SOCIAL_ICONS[socialKey] || SOCIAL_ICONS['default'];
       }
-
       contactsContainerEl.appendChild(a);
     });
   }
 
   async function loadContacts() {
     try {
-      const res = await fetch(CONTACT_SHEET_CSV_URL);
-      if (!res.ok) throw new Error();
-      const text = await res.text();
+      const text = await fetchCachedCSV(CONTACT_SHEET_CSV_URL, '_cache_contacts');
       const rows = parseCSV(text);
       if (rows.length) buildContacts(rowsToObjects(rows));
-    } catch (err) {
-      console.error("Contacts failed", err);
-    }
+    } catch (err) { console.error("Contacts failed", err); }
   }
 
-  /* ---------- Header Logo Loader ---------- */
   async function loadLogo() {
     const logoEl = document.getElementById('logo');
-    if (!LOGO_SHEET_CSV_URL) return;
-
     try {
-      const res = await fetch(LOGO_SHEET_CSV_URL);
-      if (!res.ok) throw new Error();
-      const text = await res.text();
+      const text = await fetchCachedCSV(LOGO_SHEET_CSV_URL, '_cache_logo');
       const rows = parseCSV(text);
       if (!rows.length) return;
-      const items = rowsToObjects(rows);
-
-      const row2 = items[0];
+      const row2 = rowsToObjects(rows)[0];
       if (!row2) return;
 
       const logoUrl = row2['image link'] || row2['image'] || row2['logo'];
@@ -825,25 +802,15 @@
         logoEl.addEventListener('load', () => logoEl.classList.remove('hidden'));
         logoEl.src = logoUrl;
       }
-    } catch (err) {
-      console.error("Logo failed", err);
-    }
+    } catch (err) { console.error("Logo failed", err); }
   }
 
-  /* ---------- Load All Sections Concurrently ---------- */
-  async function initAll() {
-    setStatus('Loading content…');
-    await Promise.allSettled([
-      loadGallery(),
-      loadMusic(),
-      loadShows(),
-      loadContacts(),
-      loadLogo()
-    ]);
-    hideStatus();
-  }
-
-  initAll();
+  /* Independent loading triggers so sections render as fast as possible */
+  loadLogo();
+  loadGallery();
+  loadMusic();
+  loadShows();
+  loadContacts();
 </script>
 
 </body>
