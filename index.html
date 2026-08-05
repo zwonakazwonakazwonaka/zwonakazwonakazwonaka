@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>zwonakazwonakazwonaka</title>
+<title>WORK</title>
+
+<!-- Favicon / Site Icon -->
+<link rel="icon" type="image/png" sizes="32x32" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
+<link rel="icon" type="image/png" sizes="192x192" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
+<link rel="apple-touch-icon" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
 
 <!-- Preconnect to external resources to speed up connections -->
 <link rel="preconnect" href="https://docs.google.com">
@@ -97,7 +102,6 @@
 
     nav {
       gap: 18px;
-      /* Adds left margin so the menu clears the logo area if screen is very narrow */
       margin-left: 70px; 
     }
 
@@ -117,8 +121,8 @@
 
   @media (max-width: 639px) {
     main { 
-      padding-left: 20px; 
-      padding-right: 20px;
+      padding-left: 8px; 
+      padding-right: 8px;
       gap: 80px; 
     }
   }
@@ -129,26 +133,34 @@
     min-height: 50px;
   }
 
+  /* Base gallery layout for Mobile (3 columns masonry) */
   #gallery {
-    column-count: 1;
-    column-gap: var(--gap);
+    column-count: 3;
+    column-gap: 4px;
   }
 
-  @media (min-width: 640px) { #gallery { column-count: 2; } }
+  /* Responsive breakpoints for larger screens */
+  @media (min-width: 640px) { #gallery { column-count: 2; column-gap: var(--gap); } }
   @media (min-width: 980px) { #gallery { column-count: 3; } }
   @media (min-width: 1360px) { #gallery { column-count: 4; } }
 
   figure {
-    margin: 0 0 var(--gap);
+    margin: 0 0 4px;
     break-inside: avoid;
     display: block;
+  }
+
+  @media (min-width: 640px) {
+    figure {
+      margin-bottom: 6px;
+    }
   }
 
   figure.media-video,
   figure.media-textlogo {
     column-span: all;
-    margin-top: var(--gap);
-    margin-bottom: var(--gap);
+    margin-top: 6px;
+    margin-bottom: 6px;
   }
 
   figure.media-textlogo { text-align: center; }
@@ -196,9 +208,9 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 24px;
+    padding: 6px;
     color: #ffffff;
-    font-size: 14px;
+    font-size: 10px;
     background: rgba(0, 0, 0, 0.15);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -206,16 +218,23 @@
     z-index: 2;
   }
 
+  @media (min-width: 640px) {
+    .caption-overlay {
+      padding: 12px;
+      font-size: 12px;
+    }
+  }
+
   figure a:hover .caption-overlay { opacity: 1; }
 
   .sound-prompt {
     position: absolute;
-    right: 14px;
-    bottom: 14px;
+    right: 8px;
+    bottom: 8px;
     background: rgba(17, 17, 17, 0.75);
     color: #fff;
-    font-size: 11px;
-    padding: 8px 12px;
+    font-size: 10px;
+    padding: 6px 10px;
     border: none;
     cursor: pointer;
     z-index: 2;
