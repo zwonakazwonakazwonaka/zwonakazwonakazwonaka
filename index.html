@@ -45,6 +45,7 @@
     backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: 24px 20px 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
@@ -54,9 +55,11 @@
     left: 20px;
     top: 50%;
     transform: translateY(-50%);
-    height: 40px;
+    height: 36px;
     width: auto;
     display: block;
+    max-width: 120px;
+    object-fit: contain;
   }
 
   #logo.hidden { display: none; }
@@ -80,6 +83,29 @@
 
   nav a:hover { border-bottom: 1px solid var(--ink); }
 
+  /* ---------- Mobile Adjustments for Header ---------- */
+  @media (max-width: 639px) {
+    header {
+      padding: 16px 15px;
+    }
+
+    #logo {
+      left: 15px;
+      height: 24px;
+      max-width: 80px;
+    }
+
+    nav {
+      gap: 18px;
+      /* Adds left margin so the menu clears the logo area if screen is very narrow */
+      margin-left: 70px; 
+    }
+
+    nav a {
+      font-size: 11px;
+    }
+  }
+
   main {
     max-width: 1400px;
     margin: 0 auto;
@@ -100,7 +126,7 @@
   .site-section {
     scroll-margin-top: 100px;
     width: 100%;
-    min-height: 50px; /* Prevents drastic layout shift while loading */
+    min-height: 50px;
   }
 
   #gallery {
@@ -416,11 +442,9 @@
     statusEl.classList.add('hidden');
   }
 
-  /* Helper to fetch CSV with local cache support */
   async function fetchCachedCSV(url, cacheKey) {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-      // Background re-fetch to update cache silently
       fetch(url).then(r => r.ok && r.text()).then(text => {
         if (text) localStorage.setItem(cacheKey, text);
       }).catch(()=>{});
@@ -509,7 +533,6 @@
     });
   }, { rootMargin: '100px 0px' });
 
-  /* ---------- Section Loaders ---------- */
   function buildGallery(items) {
     galleryEl.innerHTML = '';
     const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
@@ -622,7 +645,7 @@
       const rows = parseCSV(text);
       if (rows.length) buildGallery(rowsToObjects(rows));
     } catch (err) { console.error("Gallery failed", err); }
-    hideStatus(); // Hide loading text as soon as the main gallery is ready
+    hideStatus();
   }
 
   function buildMusic(items) {
@@ -805,7 +828,6 @@
     } catch (err) { console.error("Logo failed", err); }
   }
 
-  /* Independent loading triggers so sections render as fast as possible */
   loadLogo();
   loadGallery();
   loadMusic();
