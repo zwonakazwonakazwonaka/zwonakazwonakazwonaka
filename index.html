@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>zwonaka</title>
+<title>WORK</title>
 
 <!-- Favicon / Site Icon -->
 <link rel="icon" type="image/png" sizes="32x32" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
@@ -159,13 +159,15 @@
     }
   }
 
-  /* ONLY full-width textlogos span across columns */
-  figure.media-textlogo {
+  /* ONLY textlogos and the FIRST video (spotlight) span all columns */
+  figure.media-textlogo,
+  figure.media-video.spotlight-video {
     column-span: all;
     margin-top: 6px;
     margin-bottom: 6px;
-    text-align: center;
   }
+
+  figure.media-textlogo { text-align: center; }
 
   figure.media-textlogo img {
     display: inline-block;
@@ -179,8 +181,7 @@
 
   figure.media-textlogo img.loaded { opacity: 1; }
 
-  figure a,
-  .video-wrap {
+  figure a {
     display: block;
     position: relative;
     overflow: hidden;
@@ -563,7 +564,7 @@
     const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
     if (!usable.length) return;
 
-    usable.forEach((item) => {
+    usable.forEach((item, index) => {
       const figure = document.createElement('figure');
       const isTextLogo = !isVideo(item.mediaUrl) && !item.link && !item.caption;
 
@@ -582,6 +583,11 @@
 
       if (isVideo(item.mediaUrl)) {
         figure.className = 'media-video';
+        
+        // ONLY the very first media item gets full-width spotlight status if it's a video
+        if (index === 0) {
+          figure.classList.add('spotlight-video');
+        }
 
         const ytId = getYouTubeId(item.mediaUrl);
 
@@ -610,6 +616,7 @@
         } else {
           const wrap = document.createElement('div');
           wrap.className = 'video-wrap';
+          wrap.style.position = 'relative';
 
           const video = document.createElement('video');
           video.src = item.mediaUrl;
