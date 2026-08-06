@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WORK</title>
+<title>zwonakazwonakazwonaka</title>
 
 <!-- Favicon / Site Icon -->
 <link rel="icon" type="image/png" sizes="32x32" href="https://drive.google.com/thumbnail?id=1MZmYSnH8ya_xc_9_Hz9OH-94Y98CzlOg&sz=w1000">
@@ -133,16 +133,6 @@
     min-height: 50px;
   }
 
-  /* Spotlight Container Above Masonry Grid */
-  #spotlight {
-    width: 100%;
-    margin-bottom: -100px; /* Seamless flow into gallery space */
-  }
-
-  #spotlight:empty {
-    display: none;
-  }
-
   /* Base gallery layout for Mobile (3 columns masonry) */
   #gallery {
     column-count: 3;
@@ -169,13 +159,15 @@
     }
   }
 
-  /* ONLY textlogos span all columns in the masonry grid */
-  figure.media-textlogo {
+  /* ONLY textlogos and the spotlight video span all columns */
+  figure.media-textlogo,
+  figure.media-video.spotlight-video {
     column-span: all;
     margin-top: 6px;
     margin-bottom: 6px;
-    text-align: center;
   }
+
+  figure.media-textlogo { text-align: center; }
 
   figure.media-textlogo img {
     display: inline-block;
@@ -198,8 +190,7 @@
   }
 
   figure img,
-  figure video,
-  .spotlight-video video {
+  figure video {
     display: block;
     width: 100%;
     height: auto;
@@ -209,12 +200,10 @@
   }
 
   figure img.loaded,
-  figure video.loaded,
-  .spotlight-video video.loaded { opacity: 1; }
+  figure video.loaded { opacity: 1; }
 
   figure a:hover img,
-  figure .video-wrap:hover video,
-  .spotlight-video .video-wrap:hover video {
+  figure .video-wrap:hover video {
     filter: blur(6px);
     transform: scale(1.03);
   }
@@ -446,7 +435,7 @@
 <header>
   <img id="logo" class="hidden" alt="logo">
   <nav>
-    <a href="#spotlight">Home</a>
+    <a href="#gallery">Home</a>
     <a href="#music-container">Music</a>
     <a href="#shows-container">Shows</a>
     <a href="#contacts-container">Contacts</a>
@@ -456,12 +445,7 @@
 <main>
   <p id="status">Loading site content&hellip;</p>
 
-  <!-- Spotlight Row Above Masonry Grid -->
-  <section id="spotlight"></section>
-
-  <!-- Masonry Grid Gallery -->
   <section id="gallery" class="site-section"></section>
-
   <section id="music-container" class="site-section"></section>
   <section id="shows-container" class="site-section"></section>
   <section id="contacts-container" class="site-section"></section>
@@ -470,12 +454,11 @@
 <script>
   const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&gid=0";
   const LOGO_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&sheet=logos";
-  const SPOTLIGHT_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&sheet=spotlight";
   const MUSIC_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&sheet=Music";
   const SHOWS_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&sheet=shows";
   const CONTACT_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&sheet=contact";
+  const SPOTLIGHT_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14PGGXxjTjNHJsGwp11z-aQ78AXxMytGQaXIRcbcWHuw/gviz/tq?tqx=out:csv&sheet=spotlight";
 
-  const spotlightEl = document.getElementById('spotlight');
   const galleryEl = document.getElementById('gallery');
   const musicContainerEl = document.getElementById('music-container');
   const showsContainerEl = document.getElementById('shows-container');
@@ -577,11 +560,11 @@
     });
   }, { rootMargin: '100px 0px' });
 
-  function createVideoElement(mediaUrl, caption) {
-    const container = document.createElement('div');
-    container.className = 'media-video spotlight-video';
-
-    const ytId = getYouTubeId(mediaUrl);
+  // Shared builder for a playable video block (YouTube embed or direct file).
+  // Used both for the dedicated spotlight slot and for any regular video
+  // items found in the main gallery sheet, so behavior stays identical.
+  function createVideoElement(url, caption) {
+    const ytId = getYouTubeId(url);
 
     if (ytId) {
       const frame = document.createElement('div');
@@ -603,62 +586,52 @@
       });
 
       frame.appendChild(soundBtn);
-      container.appendChild(frame);
       lazyMediaObserver.observe(frame);
-    } else {
-      const wrap = document.createElement('div');
-      wrap.className = 'video-wrap';
-      wrap.style.position = 'relative';
-
-      const video = document.createElement('video');
-      video.src = mediaUrl;
-      video.loop = true;
-      video.playsInline = true;
-      video.preload = 'metadata';
-      video.muted = true;
-      video.addEventListener('loadeddata', () => video.classList.add('loaded'));
-
-      const soundBtn = document.createElement('button');
-      soundBtn.className = 'sound-prompt hidden';
-      soundBtn.type = 'button';
-      soundBtn.textContent = 'Tap for sound';
-      soundBtn.addEventListener('click', () => {
-        video.muted = false;
-        video.play();
-        soundBtn.classList.add('hidden');
-      });
-
-      video.play().catch(() => soundBtn.classList.remove('hidden'));
-
-      wrap.appendChild(video);
-      wrap.appendChild(soundBtn);
-      container.appendChild(wrap);
-      lazyMediaObserver.observe(video);
+      return frame;
     }
 
-    return container;
+    const wrap = document.createElement('div');
+    wrap.className = 'video-wrap';
+    wrap.style.position = 'relative';
+
+    const video = document.createElement('video');
+    video.src = url;
+    video.loop = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.muted = true;
+    video.addEventListener('loadeddata', () => video.classList.add('loaded'));
+
+    const soundBtn = document.createElement('button');
+    soundBtn.className = 'sound-prompt hidden';
+    soundBtn.type = 'button';
+    soundBtn.textContent = 'Tap for sound';
+    soundBtn.addEventListener('click', () => {
+      video.muted = false;
+      video.play();
+      soundBtn.classList.add('hidden');
+    });
+
+    video.play().catch(() => soundBtn.classList.remove('hidden'));
+
+    wrap.appendChild(video);
+    wrap.appendChild(soundBtn);
+    lazyMediaObserver.observe(video);
+    return wrap;
   }
 
-  function buildSpotlight(items) {
-    spotlightEl.innerHTML = '';
-    const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
-    if (!usable.length) return;
-
-    const firstItem = usable[0];
-    const videoNode = createVideoElement(firstItem.mediaUrl, firstItem.caption);
-    spotlightEl.appendChild(videoNode);
-  }
-
-  async function loadSpotlight() {
-    try {
-      const text = await fetchCachedCSV(SPOTLIGHT_SHEET_CSV_URL, '_cache_spotlight');
-      const rows = parseCSV(text);
-      if (rows.length) buildSpotlight(rowsToObjects(rows));
-    } catch (err) { console.error("Spotlight failed", err); }
-  }
-
-  function buildGallery(items) {
+  function buildGallery(items, spotlightItem) {
     galleryEl.innerHTML = '';
+
+    // Dedicated spotlight video, sourced from the "spotlight" sheet.
+    // No caption, no click-through link — just the video, full row width.
+    if (spotlightItem && spotlightItem.mediaUrl) {
+      const spotlightFigure = document.createElement('figure');
+      spotlightFigure.className = 'media-video spotlight-video';
+      spotlightFigure.appendChild(createVideoElement(spotlightItem.mediaUrl, ''));
+      galleryEl.appendChild(spotlightFigure);
+    }
+
     const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
     if (!usable.length) return;
 
@@ -680,8 +653,8 @@
       }
 
       if (isVideo(item.mediaUrl)) {
-        const videoNode = createVideoElement(item.mediaUrl, item.caption);
-        galleryEl.appendChild(videoNode);
+        figure.className = 'media-video';
+        figure.appendChild(createVideoElement(item.mediaUrl, item.caption));
       } else {
         const a = document.createElement('a');
         a.href = item.link || item.mediaUrl;
@@ -705,16 +678,34 @@
         }
 
         figure.appendChild(a);
-        galleryEl.appendChild(figure);
       }
+
+      galleryEl.appendChild(figure);
     });
   }
 
   async function loadGallery() {
     try {
-      const text = await fetchCachedCSV(SHEET_CSV_URL, '_cache_gallery');
-      const rows = parseCSV(text);
-      if (rows.length) buildGallery(rowsToObjects(rows));
+      const [galleryText, spotlightText] = await Promise.all([
+        fetchCachedCSV(SHEET_CSV_URL, '_cache_gallery'),
+        fetchCachedCSV(SPOTLIGHT_SHEET_CSV_URL, '_cache_spotlight').catch(() => null)
+      ]);
+
+      const rows = parseCSV(galleryText);
+      const galleryItems = rows.length ? rowsToObjects(rows) : [];
+
+      let spotlightItem = null;
+      if (spotlightText) {
+        const spotlightRows = parseCSV(spotlightText);
+        if (spotlightRows.length) {
+          const spotlightItems = rowsToObjects(spotlightRows)
+            .map(item => ({ ...item, mediaUrl: getMediaUrl(item) }))
+            .filter(item => item.mediaUrl);
+          if (spotlightItems.length) spotlightItem = spotlightItems[0];
+        }
+      }
+
+      buildGallery(galleryItems, spotlightItem);
     } catch (err) { console.error("Gallery failed", err); }
     hideStatus();
   }
@@ -900,7 +891,6 @@
   }
 
   loadLogo();
-  loadSpotlight();
   loadGallery();
   loadMusic();
   loadShows();
