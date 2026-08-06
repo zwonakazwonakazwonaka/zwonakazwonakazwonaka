@@ -6,9 +6,9 @@
 <title>zwonakazwonakazwonaka</title>
 
 <!-- Favicon / Site Icon -->
-<link rel="icon" type="image/png" sizes="32x32" href="https://drive.google.com/thumbnail?id=1MZmYSnH8ya_xc_9_Hz9OH-94Y98CzlOg&sz=w1000">
-<link rel="icon" type="image/png" sizes="192x192" href="https://drive.google.com/thumbnail?id=1MZmYSnH8ya_xc_9_Hz9OH-94Y98CzlOg&sz=w1000">
-<link rel="apple-touch-icon" href="https://drive.google.com/thumbnail?id=1MZmYSnH8ya_xc_9_Hz9OH-94Y98CzlOg&sz=w1000">
+<link rel="icon" type="image/png" sizes="32x32" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
+<link rel="icon" type="image/png" sizes="192x192" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
+<link rel="apple-touch-icon" href="https://drive.google.com/thumbnail?id=1mj7-h07vgDUlENsDrdu8Ix0KbNRmp7QH&sz=w1000">
 
 <!-- Preconnect to external resources to speed up connections -->
 <link rel="preconnect" href="https://docs.google.com">
@@ -156,8 +156,9 @@
     }
   }
 
-  figure.media-video,
-  figure.media-textlogo {
+  /* Only textlogos and the designated first spotlight video span all columns */
+  figure.media-textlogo,
+  figure.media-video.spotlight-video {
     column-span: all;
     margin-top: 6px;
     margin-bottom: 6px;
@@ -557,7 +558,7 @@
     const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
     if (!usable.length) return;
 
-    usable.forEach(item => {
+    usable.forEach((item, index) => {
       const figure = document.createElement('figure');
       const isTextLogo = !isVideo(item.mediaUrl) && !item.link && !item.caption;
 
@@ -576,6 +577,12 @@
 
       if (isVideo(item.mediaUrl)) {
         figure.className = 'media-video';
+        
+        // Only trigger full-width spotlight if this is the very first piece of media on the page
+        if (index === 0) {
+          figure.classList.add('spotlight-video');
+        }
+
         const ytId = getYouTubeId(item.mediaUrl);
 
         if (ytId) {
