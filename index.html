@@ -51,6 +51,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 34px;
     padding: 24px 20px 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
@@ -61,7 +62,7 @@
     display: block;
     max-width: 120px;
     object-fit: contain;
-    margin: 0 34px;
+    margin: 0;
     flex-shrink: 0;
   }
 
@@ -92,13 +93,14 @@
   /* ---------- Mobile Adjustments for Header ---------- */
   @media (max-width: 639px) {
     header {
+      gap: 14px;
       padding: 16px 10px;
     }
 
     #logo {
       height: 24px;
       max-width: 70px;
-      margin: 0 14px;
+      margin: 0;
     }
 
     nav {
@@ -642,7 +644,7 @@
     galleryEl.innerHTML = '';
 
     // Dedicated spotlight video, sourced from the "spotlight" sheet.
-    // Every row in the "spotlight" sheet becomes a full-width video, stacked
+    // Every row in the "spotlight" sheet becomes a full-width photo or video, stacked
     // vertically in sheet order, each with an optional caption from "text".
     (spotlightItems || []).forEach(spotlightItem => {
       if (!spotlightItem.mediaUrl) return;
@@ -654,7 +656,16 @@
         captionEl.textContent = spotlightItem.text;
         spotlightFigure.appendChild(captionEl);
       }
-      spotlightFigure.appendChild(createVideoElement(spotlightItem.mediaUrl, ''));
+      if (isVideo(spotlightItem.mediaUrl)) {
+        spotlightFigure.appendChild(createVideoElement(spotlightItem.mediaUrl, ''));
+      } else {
+        const img = document.createElement('img');
+        img.src = spotlightItem.mediaUrl;
+        img.referrerPolicy = 'no-referrer';
+        img.alt = spotlightItem.text || '';
+        img.addEventListener('load', () => img.classList.add('loaded'));
+        spotlightFigure.appendChild(img);
+      }
       galleryEl.appendChild(spotlightFigure);
     });
 
