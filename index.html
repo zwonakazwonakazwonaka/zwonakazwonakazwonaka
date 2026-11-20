@@ -167,6 +167,20 @@
     margin-bottom: 6px;
   }
 
+  .spotlight-caption {
+    font-size: 28px;
+    line-height: 1.15;
+    text-align: center;
+    padding: 12px 8px 14px;
+  }
+
+  @media (max-width: 639px) {
+    .spotlight-caption {
+      font-size: 20px;
+      padding: 8px 4px 10px;
+    }
+  }
+
   figure.media-textlogo { text-align: center; }
 
   figure.media-textlogo img {
@@ -624,17 +638,25 @@
     return wrap;
   }
 
-  function buildGallery(items, spotlightItem) {
+  function buildGallery(items, spotlightItems) {
     galleryEl.innerHTML = '';
 
     // Dedicated spotlight video, sourced from the "spotlight" sheet.
-    // No caption, no click-through link — just the video, full row width.
-    if (spotlightItem && spotlightItem.mediaUrl) {
+    // Every row in the "spotlight" sheet becomes a full-width video, stacked
+    // vertically in sheet order, each with an optional caption from "text".
+    (spotlightItems || []).forEach(spotlightItem => {
+      if (!spotlightItem.mediaUrl) return;
       const spotlightFigure = document.createElement('figure');
       spotlightFigure.className = 'media-video spotlight-video';
+      if (spotlightItem.text) {
+        const captionEl = document.createElement('div');
+        captionEl.className = 'spotlight-caption';
+        captionEl.textContent = spotlightItem.text;
+        spotlightFigure.appendChild(captionEl);
+      }
       spotlightFigure.appendChild(createVideoElement(spotlightItem.mediaUrl, ''));
       galleryEl.appendChild(spotlightFigure);
-    }
+    });
 
     const usable = items.map(item => ({ ...item, mediaUrl: getMediaUrl(item) })).filter(item => item.mediaUrl);
     if (!usable.length) return;
@@ -698,18 +720,17 @@
       const rows = parseCSV(galleryText);
       const galleryItems = rows.length ? rowsToObjects(rows) : [];
 
-      let spotlightItem = null;
+      let spotlightItems = [];
       if (spotlightText) {
         const spotlightRows = parseCSV(spotlightText);
         if (spotlightRows.length) {
-          const spotlightItems = rowsToObjects(spotlightRows)
+          spotlightItems = rowsToObjects(spotlightRows)
             .map(item => ({ ...item, mediaUrl: getMediaUrl(item) }))
             .filter(item => item.mediaUrl);
-          if (spotlightItems.length) spotlightItem = spotlightItems[0];
         }
       }
 
-      buildGallery(galleryItems, spotlightItem);
+      buildGallery(galleryItems, spotlightItems);
     } catch (err) { console.error("Gallery failed", err); }
     hideStatus();
   }
